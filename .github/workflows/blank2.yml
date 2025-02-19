@@ -18,23 +18,22 @@ jobs:
         run: |
           apt-get update && apt-get install -y wget unzip ffmpeg libfdk-aac2
 
-      - name: Download MP4 folder from external source
+      - name: Download MP4 file
         run: |
-          wget "http://ts.karaj.online:8080/Migration2023_1080p.mp4"
-          unzip input_videos.zip -d input_videos
+          wget -O Migration2023_1080p.mp4 "http://ts.karaj.online:8080/Migration2023_1080p.mp4"
 
-      - name: Process videos with FFmpeg
+      - name: Process video with FFmpeg
         run: |
           mkdir -p output_videos
-          for input_file in *.mp4; do
-            output_file="output_videos/$(basename "$input_file" .mp4)_processed.mp4"
-            /usr/bin/ffmpeg -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
-              -codec:v libx264 -preset veryfast -crf 52 \
-              -codec:a libfdk_aac -codec:s mov_text -copyts -y "$output_file"
-          done
+          input_file="Migration2023_1080p.mp4"
+          output_file="output_videos/$(basename "$input_file" .mp4)_processed.mp4"
+          /usr/bin/ffmpeg -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
+            -codec:v libx264 -preset veryfast -crf 52 \
+            -codec:a libfdk_aac -codec:s mov_text -copyts -y "$output_file"
 
-      - name: Upload output files as artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload processed video
+        uses: actions/upload-artifact@v4
         with:
           name: processed_videos
           path: output_videos/
+          retention-days: 7  # Adjust retention period
