@@ -29,7 +29,7 @@ jobs:
           output_file="output_videos/$(basename "$input_file" .mp4)_processed.mp4"
           /usr/bin/ffmpeg -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
             -codec:v libx264 -preset veryfast -crf 52 \
-            -codec:a libfdk_aac -codec:s mov_text -copyts -y "$output_file"
+            -codec:a aac -codec:s mov_text -copyts -y "$output_file"
 
       - name: Upload processed video
         uses: actions/upload-artifact@v4
