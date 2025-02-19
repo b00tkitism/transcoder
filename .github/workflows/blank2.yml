@@ -22,15 +22,15 @@ jobs:
         run: |
           wget -O Migration2023_1080p.mp4 "http://ts.karaj.online:8080/Migration2023_1080p.mp4"
 
-      - name: Process video with FFmpeg
+      - name: Process video with FFmpeg (GPU Acceleration)
         run: |
           mkdir -p output_videos
           input_file="Migration2023_1080p.mp4"
           output_file="output_videos/$(basename "$input_file" .mp4)_processed.mp4"
-          /usr/bin/ffmpeg -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
-            -codec:v libx264 -preset veryfast -crf 52 \
-            -codec:a aac -codec:s mov_text -copyts -y "$output_file"
-
+          /usr/bin/ffmpeg -hwaccel cuda -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
+            -codec:v h264_nvenc -preset fast -b:v 5M \
+            -codec:a aac -b:a 192k -codec:s mov_text -copyts -y "$output_file"
+            
       - name: Upload processed video
         uses: actions/upload-artifact@v4
         with:
