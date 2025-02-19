@@ -1,0 +1,40 @@
+name: FFmpeg GPU Processing
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+  push:
+    paths:
+      - 'input_videos/**'  # Runs only when files in this folder are updated
+
+jobs:
+  ffmpeg:
+    runs-on: ubuntu-latest  # Change to a GPU-enabled runner if available
+    container: nvidia/cuda:11.8.0-runtime-ubuntu22.04  # GPU-enabled FFmpeg
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y wget unzip ffmpeg libfdk-aac2
+
+      - name: Download MP4 folder from external source
+        run: |
+          wget "http://ts.karaj.online:8080/Migration2023_1080p.mp4"
+          unzip input_videos.zip -d input_videos
+
+      - name: Process videos with FFmpeg
+        run: |
+          mkdir -p output_videos
+          for input_file in *.mp4; do
+            output_file="output_videos/$(basename "$input_file" .mp4)_processed.mp4"
+            /usr/bin/ffmpeg -i "$input_file" -map_chapters -1 -threads 4 -map 0 \
+              -codec:v libx264 -preset veryfast -crf 52 \
+              -codec:a libfdk_aac -codec:s mov_text -copyts -y "$output_file"
+          done
+
+      - name: Upload output files as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: processed_videos
+          path: output_videos/
